@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Muslim Prayer Times</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #ffc0cb; /* Pink background */
+            color: #003366; /* Dark blue text */
+            text-align: center;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #003366; /* Dark blue */
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            color: #003366; /* Dark blue */
+            text-transform: uppercase;
+        }
+
+        td {
+            text-transform: capitalize;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9; /* Light gray background for even rows */
+        }
+
+        tr:hover {
+            background-color: #f2f2f2; /* Lighter gray background on hover */
+        }
+
+        #date-picker {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Muslim Prayer Times</h1>
+        <input type="date" id="date-picker">
+        <table>
+            <thead>
+                <tr>
+                    <th>Location</th>
+                    <th>Fajr</th>
+                    <th>Dhuhr</th>
+                    <th>Asr</th>
+                    <th>Maghrib</th>
+                    <th>Isha</th>
+                </tr>
+            </thead>
+            <tbody id="prayer-times">
+                
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Function to fetch prayer times
+        async function fetchPrayerTimes(location, date) {
+            const response = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${location}&country=&date=${date}`);
+            const data = await response.json();
+            return data.data.timings;
+        }
+
+        // Function to display prayer times
+        async function displayPrayerTimes() {
+            const locations = {
+                "Kuwait": "Kuwait",
+                "Mekkah": "Makkah",
+                "Palestine": "Jerusalem",
+                "Egypt": "Cairo",
+                "Turkey": "Istanbul",
+                "London": "London",
+                "Toronto": "Toronto",
+                "New York": "New York",
+            };
+
+            const prayerTimesTable = document.getElementById("prayer-times");
+            const datePicker = document.getElementById("date-picker");
+
+            datePicker.addEventListener("change", async () => {
+                const selectedDate = datePicker.value;
+
+                // Clear previous data
+                prayerTimesTable.innerHTML = "";
+
+                for (const [location, city] of Object.entries(locations)) {
+                    const prayerTimes = await fetchPrayerTimes(city, selectedDate);
+
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${location}</td>
+                        <td>${prayerTimes.Fajr}</td>
+                        <td>${prayerTimes.Dhuhr}</td>
+                        <td>${prayerTimes.Asr}</td>
+                        <td>${prayerTimes.Maghrib}</td>
+                        <td>${prayerTimes.Isha}</td>
+                    `;
+
+                    prayerTimesTable.appendChild(row);
+                }
+            });
+
+            // Set initial prayer times for current date
+            const currentDate = new Date().toISOString().split('T')[0];
+            datePicker.value = currentDate;
+            const initialSelectedDate = datePicker.value;
+
+            for (const [location, city] of Object.entries(locations)) {
+                const prayerTimes = await fetchPrayerTimes(city, initialSelectedDate);
+
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${location}</td>
+                    <td>${prayerTimes.Fajr}</td>
+                    <td>${prayerTimes.Dhuhr}</td>
+                    <td>${prayerTimes.Asr}</td>
+                    <td>${prayerTimes.Maghrib}</td>
+                    <td>${prayerTimes.Isha}</td>
+                `;
+
+                prayerTimesTable.appendChild(row);
+            }
+        }
+
+        displayPrayerTimes();
+    </script>
+</body>
+</html>
